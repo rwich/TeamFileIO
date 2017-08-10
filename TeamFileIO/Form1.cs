@@ -14,6 +14,9 @@ namespace TeamFileIO
 {
     public partial class Form1 : Form
     {
+        string fileContents = string.Empty;
+        string fileName = string.Empty;
+
         public Form1()
         {
             InitializeComponent();
@@ -30,7 +33,8 @@ namespace TeamFileIO
                 using (StreamReader fileIn = new StreamReader(openFileDialog.FileName))
                 {
                     txtFilename.Text = openFileDialog.FileName;
-                    string fileContents = fileIn.ReadToEnd();
+                    fileName = txtFilename.Text;
+                    fileContents = fileIn.ReadToEnd();
                     txtFileContents.Text = fileContents;
                 }
             }
@@ -42,7 +46,7 @@ namespace TeamFileIO
 
         private void btnEncrypt_Click(object sender, EventArgs e)
         {
-            //TODO Insert encrypt code
+            //TODO Ensure fileContents is not null or empty, insert encrypt code
 
             //TODO Update txtFileContents.Text to show the encrypted data
             txtEncryptedFileContents.Text = "This is encrypted text";
@@ -50,7 +54,7 @@ namespace TeamFileIO
             //Save file as "encrypted_filename.txt"
             SaveFileDialog savefile = new SaveFileDialog();
             savefile.Title = "Save Text File";
-            savefile.FileName = "encrypted_file.txt";
+            savefile.FileName = "ENCRYPTED" + fileName;
             savefile.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
 
             if (savefile.ShowDialog() == DialogResult.OK)
@@ -86,6 +90,11 @@ namespace TeamFileIO
             {
                 MessageBox.Show("File could not be saved.");
             }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
