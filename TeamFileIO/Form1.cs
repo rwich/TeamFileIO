@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -46,15 +47,17 @@ namespace TeamFileIO
 
         private void btnEncrypt_Click(object sender, EventArgs e)
         {
-            //TODO Ensure fileContents is not null or empty, insert encrypt code
+            //TODO Ensure fileContents is not null or empty
+            Aes newAes = Aes.Create();
+            byte[] cipherText = EncryptText(fileContents, newAes.Key, newAes.IV);
 
             //TODO Update txtFileContents.Text to show the encrypted data
-            txtEncryptedFileContents.Text = "This is encrypted text";
+            txtEncryptedFileContents.Text = BitConverter.ToString(cipherText).Replace("-", string.Empty).ToLower();
 
             //Save file as "encrypted_filename.txt"
             SaveFileDialog savefile = new SaveFileDialog();
             savefile.Title = "Save Text File";
-            savefile.FileName = "ENCRYPTED" + fileName;
+            savefile.FileName = fileName.Substring(0, fileName.Length - 4) + "ENCRYPTED";
             savefile.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
 
             if (savefile.ShowDialog() == DialogResult.OK)
@@ -66,6 +69,38 @@ namespace TeamFileIO
             {
                 MessageBox.Show("File could not be saved.");
             }
+        }
+
+        private byte[] EncryptText(string fileContents, byte[] key, byte[] iV)
+        {
+            if(fileContents == null || fileContents.Length < 1)
+                throw new ArgumentNullException("fileContents");
+            if (key == null || key.Length < 1)
+                throw new ArgumentNullException("key");
+            if (iV == null || iV.Length < 1)
+                throw new ArgumentNullException("iv");
+
+            byte[] encrypted;
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = key;
+                aesAlg.IV = iV;
+
+                ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+
+                using (MemoryStream msEncrypt = new MemoryStream())
+                {
+                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    {
+                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                        {
+                            swEncrypt.Write(fileContents);
+                        }
+                        encrypted = msEncrypt.ToArray();
+                    }
+                }
+            }
+            return encrypted;
         }
 
         private void btnDecrypt_Click(object sender, EventArgs e)
