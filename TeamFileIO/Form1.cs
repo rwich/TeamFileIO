@@ -17,6 +17,8 @@ namespace TeamFileIO
     {
         string fileContents = string.Empty;
         string fileName = string.Empty;
+        byte[] cipherText;
+        Aes newAes = Aes.Create();
 
         public Form1()
         {
@@ -48,8 +50,8 @@ namespace TeamFileIO
         private void btnEncrypt_Click(object sender, EventArgs e)
         {
             //TODO Ensure fileContents is not null or empty
-            Aes newAes = Aes.Create();
-            byte[] cipherText = EncryptText(fileContents, newAes.Key, newAes.IV);
+           
+            cipherText = EncryptText(fileContents, newAes.Key, newAes.IV);
 
             //TODO Update txtFileContents.Text to show the encrypted data
             txtEncryptedFileContents.Text = BitConverter.ToString(cipherText).Replace("-", string.Empty).ToLower();
@@ -105,15 +107,15 @@ namespace TeamFileIO
 
         private void btnDecrypt_Click(object sender, EventArgs e)
         {
-            //TO Insert decrypt code
+            string decrypted = DecryptText(cipherText, newAes.Key, newAes.IV);
 
             //TODO Update txtFileContents.Text to show the decrypted data
-            txtDecryptedFileContents.Text = "This is decrypted text";
+            txtDecryptedFileContents.Text = decrypted;
 
             //Save file as "decrypted_filename.txt"
             SaveFileDialog savefile = new SaveFileDialog();
             savefile.Title = "Save Text File";
-            savefile.FileName = "decrypted_file.txt";
+            savefile.FileName = fileName.Substring(0, fileName.Length - 4) + "DECRYPTED";
             savefile.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
 
             if (savefile.ShowDialog() == DialogResult.OK)
@@ -125,6 +127,38 @@ namespace TeamFileIO
             {
                 MessageBox.Show("File could not be saved.");
             }
+        }
+
+        private string DecryptText(byte[] encrypted, byte[] key, byte[] iV)
+        {
+            if (encrypted == null || encrypted.Length < 1)
+                throw new ArgumentNullException("encrypted");
+            if (key == null || key.Length < 1)
+                throw new ArgumentNullException("key");
+            if (iV == null || iV.Length < 1)
+                throw new ArgumentNullException("iV");
+
+            string plainText = string.Empty;
+
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = key;
+                aesAlg.IV = iV;
+
+                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+                using (MemoryStream msDecrypt = new MemoryStream(encrypted))
+                {
+                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                        {
+                            plainText = srDecrypt.ReadToEnd();
+                        }
+                    }
+                }
+            }
+            return plainText;
         }
 
         private void Form1_Load(object sender, EventArgs e)
