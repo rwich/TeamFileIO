@@ -19,6 +19,8 @@ namespace TeamFileIO
         string fileName = string.Empty;
         byte[] cipherText;
         Aes newAes = Aes.Create();
+        byte[] key = new byte[] { 0x12, 0xB7, 0xCF, 0x4D, 0x06, 0x87, 0x04, 0x41, 0x03, 0xC4, 0xAE, 0x1E, 0x51, 0x4E, 0x92, 0x18, 0xDE, 0x48, 0x63, 0x1F, 0x8A, 0xD0, 0x33, 0xAD, 0x90, 0xDF, 0xB1, 0xC3, 0x2C, 0x23, 0xF0, 0x6C };
+        byte[] vector = new byte[] { 0x12, 0xB7, 0xCF, 0x4D, 0x06, 0x87, 0x04, 0x41, 0x03, 0xC4, 0xAE, 0x1E, 0x51, 0x4E, 0x92, 0x18 };
 
         public Form1()
         {
@@ -38,7 +40,6 @@ namespace TeamFileIO
                     txtFilename.Text = openFileDialog.FileName;
                     fileName = txtFilename.Text;
                     fileContents = fileIn.ReadToEnd();
-                    txtFileContents.Text = fileContents;
                 }
             }
             else
@@ -49,14 +50,10 @@ namespace TeamFileIO
 
         private void btnEncrypt_Click(object sender, EventArgs e)
         {
-            //TODO Ensure fileContents is not null or empty
-           
-            cipherText = EncryptText(fileContents, newAes.Key, newAes.IV);
+            cipherText = EncryptText(fileContents, key, vector);
 
-            //TODO Update txtFileContents.Text to show the encrypted data
-            txtEncryptedFileContents.Text = BitConverter.ToString(cipherText).Replace("-", string.Empty).ToLower();
+            string cipherTextAsString = BitConverter.ToString(cipherText).Replace("-", string.Empty).ToLower();
 
-            //Save file as "encrypted_filename.txt"
             SaveFileDialog savefile = new SaveFileDialog();
             savefile.Title = "Save Text File";
             savefile.FileName = fileName.Substring(0, fileName.Length - 4) + "ENCRYPTED";
@@ -65,7 +62,7 @@ namespace TeamFileIO
             if (savefile.ShowDialog() == DialogResult.OK)
             {
                 using (StreamWriter sw = new StreamWriter(savefile.FileName))
-                    sw.Write(txtEncryptedFileContents.Text);
+                    sw.Write(cipherTextAsString);
             }
             else
             {
@@ -85,6 +82,7 @@ namespace TeamFileIO
             byte[] encrypted;
             using (Aes aesAlg = Aes.Create())
             {
+                
                 aesAlg.Key = key;
                 aesAlg.IV = iV;
 
@@ -98,8 +96,9 @@ namespace TeamFileIO
                         {
                             swEncrypt.Write(fileContents);
                         }
-                        encrypted = msEncrypt.ToArray();
+                        
                     }
+                    encrypted = msEncrypt.ToArray();
                 }
             }
             return encrypted;
@@ -107,12 +106,9 @@ namespace TeamFileIO
 
         private void btnDecrypt_Click(object sender, EventArgs e)
         {
-            string decrypted = DecryptText(cipherText, newAes.Key, newAes.IV);
+            cipherText = Encoding.ASCII.GetBytes(fileContents);
+            string decrypted = DecryptText(cipherText, key, vector);
 
-            //TODO Update txtFileContents.Text to show the decrypted data
-            txtDecryptedFileContents.Text = decrypted;
-
-            //Save file as "decrypted_filename.txt"
             SaveFileDialog savefile = new SaveFileDialog();
             savefile.Title = "Save Text File";
             savefile.FileName = fileName.Substring(0, fileName.Length - 4) + "DECRYPTED";
@@ -121,7 +117,7 @@ namespace TeamFileIO
             if (savefile.ShowDialog() == DialogResult.OK)
             {
                 using (StreamWriter sw = new StreamWriter(savefile.FileName))
-                    sw.Write(txtDecryptedFileContents.Text);
+                    sw.Write(decrypted);
             }
             else
             {
