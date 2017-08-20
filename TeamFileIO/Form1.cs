@@ -52,7 +52,7 @@ namespace TeamFileIO
         {
             cipherText = EncryptText(fileContents, key, vector);
 
-            string cipherTextAsString = BitConverter.ToString(cipherText).Replace("-", string.Empty).ToLower();
+            string cipherTextAsString = Convert.ToBase64String(cipherText);
 
             SaveFileDialog savefile = new SaveFileDialog();
             savefile.Title = "Save Text File";
@@ -106,7 +106,7 @@ namespace TeamFileIO
 
         private void btnDecrypt_Click(object sender, EventArgs e)
         {
-            cipherText = Encoding.ASCII.GetBytes(fileContents);
+            cipherText = Convert.FromBase64String(fileContents);
             string decrypted = DecryptText(cipherText, key, vector);
 
             SaveFileDialog savefile = new SaveFileDialog();
@@ -155,11 +155,6 @@ namespace TeamFileIO
                 }
             }
             return plainText;
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
         }
     }
 }
